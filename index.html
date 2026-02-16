@@ -6,6 +6,7 @@
     <title>ASTREOS - Simulateur Financier</title>
 
     <!-- PWA — Mode Standalone & Barre d'état -->
+    <link rel="manifest" href="manifest.json">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -100,36 +101,37 @@
 
         /* --- BOUTON THEME SWITCHER --- */
         .theme-toggle {
-            position: fixed;
-            top: 20px;
+            position: absolute;
             right: 20px;
-            background-color: var(--bg-card);
-            color: var(--text-main);
-            border: 1px solid var(--border-color);
+            background: none;
+            color: var(--text-header);
+            border: 1px solid rgba(255,255,255,0.2);
             padding: 10px 15px;
             border-radius: 30px;
             font-size: 1.2rem;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
             z-index: 1000;
             transition: all 0.3s ease;
         }
-        .theme-toggle:hover { transform: scale(1.1); }
+        .theme-toggle:hover { transform: scale(1.1); background: rgba(255,255,255,0.1); }
 
         /* --- HEADER --- */
         .header-curved {
             background-color: var(--bg-header);
-            width: 100%; /* S'adapte au conteneur */
-            max-width: 1250px; /* Même largeur max que la carte */
+            width: 100%;
+            max-width: 1250px;
             margin-top: 30px;
             margin-bottom: 20px;
-            padding: 25px 0;
-            border-radius: 15px; 
-            text-align: center;
+            padding: 25px 30px;
+            border-radius: 15px;
             color: var(--text-header);
-            
-            /* Application de l'ombre variable (Glow en dark mode) */
             box-shadow: var(--shadow-header);
             transition: box-shadow 0.3s;
+
+            /* Flex pour aligner logo + toggle */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
         }
 
         .logo-area {
@@ -795,8 +797,8 @@
             }
 
             .theme-toggle {
-                top: 12px;
-                right: 12px;
+                position: static;
+                margin-left: auto;
                 padding: 8px 12px;
                 font-size: 1rem;
             }
@@ -1017,14 +1019,13 @@
 </head>
 <body>
 
-    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Changer le thème">
-        <i class="fas fa-moon"></i>
-    </button>
-
     <div class="header-curved">
         <div class="logo-area">
             ASTREOS
         </div>
+        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Changer le thème">
+            <i class="fas fa-moon"></i>
+        </button>
     </div>
 
     <!-- TOOLBAR -->
