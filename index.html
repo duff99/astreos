@@ -114,6 +114,9 @@
         }
         .theme-toggle:hover { transform: scale(1.1); background: rgba(255,255,255,0.1); }
 
+        /* Spacer invisible pour centrer le logo quand le toggle est inline */
+        .header-spacer { display: none; }
+
         /* --- HEADER --- */
         .header-curved {
             background-color: var(--bg-header);
@@ -787,20 +790,28 @@
             .header-curved {
                 margin-top: 15px;
                 margin-bottom: 12px;
-                padding: 18px 0;
+                padding: 18px 20px;
                 border-radius: 10px;
             }
 
             .logo-area {
                 font-size: 1.5rem;
                 letter-spacing: 2px;
+                flex: 1;
+                text-align: center;
             }
 
             .theme-toggle {
                 position: static;
-                margin-left: auto;
+                flex-shrink: 0;
                 padding: 8px 12px;
                 font-size: 1rem;
+            }
+
+            .header-spacer {
+                display: block;
+                width: 42px; /* Même largeur que le toggle pour centrer le logo */
+                flex-shrink: 0;
             }
 
             .main-card {
@@ -1020,6 +1031,7 @@
 <body>
 
     <div class="header-curved">
+        <div class="header-spacer"></div>
         <div class="logo-area">
             ASTREOS
         </div>
