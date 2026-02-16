@@ -1,0 +1,2030 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASTREOS - Simulateur Financier</title>
+
+    <!-- PWA — Mode Standalone & Barre d'état -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ASTREOS">
+    <meta name="application-name" content="ASTREOS">
+    <meta name="theme-color" content="#000000">
+    <meta name="msapplication-navbutton-color" content="#000000">
+
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        /* --- GESTION DES THEMES (Variables CSS) --- */
+        :root {
+            /* THÈME CLAIR (Par défaut) */
+            --bg-body: #f4f6f9;
+            --bg-card: #ffffff;
+            --bg-input: #ffffff;
+            --bg-element: #fafafa;
+            --bg-highlight: #fcfcfc;
+            --bg-header: #000000;
+            
+            --text-main: #222222;
+            --text-muted: #666666;
+            --text-header: #ffffff;
+            
+            --border-color: #e0e0e0;
+            --border-input: #cccccc;
+            
+            --success: #27ae60;
+            --danger: #c0392b;
+            --accent-blue: #3498db;
+            
+            --shadow-card: 0 5px 20px rgba(0,0,0,0.05);
+            /* Ombre portée classique vers le bas pour le header */
+            --shadow-header: 0 4px 15px rgba(0,0,0,0.2); 
+        }
+
+        /* THÈME SOMBRE */
+        [data-theme="dark"] {
+            --bg-body: #121212;
+            --bg-card: #1e1e1e;
+            --bg-input: #2d2d2d;
+            --bg-element: #252525;
+            --bg-highlight: #252525;
+            --bg-header: #000000;
+            
+            --text-main: #e0e0e0;
+            --text-muted: #a0a0a0;
+            --text-header: #ffffff;
+            
+            --border-color: #333333;
+            --border-input: #444444;
+            
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --accent-blue: #5dade2;
+            
+            --shadow-card: 0 5px 20px rgba(0,0,0,0.3);
+            /* EFFET LUMINEUX BLANC/GRIS pour le header en mode sombre */
+            --shadow-header: 0 0 25px rgba(255, 255, 255, 0.15), 0 0 10px rgba(255, 255, 255, 0.05); 
+        }
+
+        /* --- GLOBAL --- */
+        * {
+            box-sizing: border-box; /* Assure que le padding ne casse pas les largeurs */
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            padding-bottom: 40px;
+            transition: background-color 0.3s, color 0.3s;
+            
+            /* CENTRAGE GLOBAL PARFAIT */
+            display: flex;
+            flex-direction: column;
+            align-items: center; 
+            min-height: 100vh;
+            
+            /* Curseur */
+            cursor: default; 
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        input { cursor: text; user-select: text; }
+        .option-label, .theme-toggle, input[type="checkbox"] { cursor: pointer; }
+
+        /* --- BOUTON THEME SWITCHER --- */
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: var(--bg-card);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 10px 15px;
+            border-radius: 30px;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+        .theme-toggle:hover { transform: scale(1.1); }
+
+        /* --- HEADER --- */
+        .header-curved {
+            background-color: var(--bg-header);
+            width: 100%; /* S'adapte au conteneur */
+            max-width: 1250px; /* Même largeur max que la carte */
+            margin-top: 30px;
+            margin-bottom: 20px;
+            padding: 25px 0;
+            border-radius: 15px; 
+            text-align: center;
+            color: var(--text-header);
+            
+            /* Application de l'ombre variable (Glow en dark mode) */
+            box-shadow: var(--shadow-header);
+            transition: box-shadow 0.3s;
+        }
+
+        .logo-area {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 800;
+            font-size: 2.2rem;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+        }
+
+        /* --- CONTAINER PRINCIPAL --- */
+        .main-card {
+            background-color: var(--bg-card);
+            width: 100%;
+            max-width: 1250px;
+            padding: 40px;
+            border-radius: 15px; 
+            box-shadow: var(--shadow-card);
+            display: grid;
+            grid-template-columns: 1fr 1.3fr;
+            gap: 40px;
+            transition: background-color 0.3s, box-shadow 0.3s;
+            border: 1px solid var(--border-color); /* Légère bordure pour le contraste en dark mode */
+        }
+
+        /* --- TITRES --- */
+        h3 {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 1rem;
+            color: var(--text-main);
+            margin-top: 0;
+            margin-bottom: 25px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* --- FORMULAIRE --- */
+        .form-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            flex: 1;
+        }
+
+        /* Inputs */
+        input[type="number"], input[type="text"] {
+            background-color: var(--bg-input);
+            color: var(--text-main);
+            border: 1px solid var(--border-input);
+            border-radius: 6px;
+            transition: border-color 0.3s, background-color 0.3s, color 0.3s;
+        }
+        
+        input:focus { outline: none; border-color: var(--text-main); }
+
+        /* Wrapper input avec icone € */
+        .input-with-icon { position: relative; width: 130px; }
+
+        .input-with-icon input {
+            width: 100%;
+            padding: 10px 30px 10px 10px; 
+            font-size: 0.95rem;
+            text-align: right;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .input-with-icon::after {
+            content: '€';
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-weight: 500;
+            pointer-events: none;
+        }
+
+        /* Inputs spéciaux */
+        .input-pct { 
+            width: 70px !important; 
+            border-color: var(--accent-blue) !important; 
+            color: var(--accent-blue) !important; 
+            font-weight: bold; 
+            border-radius:6px; 
+            padding: 10px; 
+            text-align: center; 
+            border: 1px solid var(--border-input);
+        }
+        .input-readonly { 
+            background-color: var(--bg-element) !important; 
+            border: 1px dashed var(--border-input) !important; 
+            color: var(--text-muted) !important; 
+            font-weight: bold; 
+        }
+
+        /* --- OPTIONS --- */
+        .option-item {
+            background-color: var(--bg-element);
+            border: 1px solid var(--border-color);
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.3s;
+        }
+        
+        .option-label { 
+            display: flex; 
+            align-items: center; 
+            font-size: 0.9rem; 
+            font-weight: 500; 
+            color: var(--text-main);
+        }
+        .option-label input { 
+            margin-right: 12px; 
+            transform: scale(1.2);
+            accent-color: var(--text-main); 
+        }
+        
+        .input-mini-simple {
+            width: 80px;
+            padding: 8px 10px;
+            text-align: right;
+            font-size: 0.9rem;
+        }
+
+        /* --- TABLEAU --- */
+        .result-panel { 
+            background-color: var(--bg-card); 
+            border-left: 1px solid var(--border-color); 
+            padding-left: 40px; 
+        }
+
+        .bilan-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 0.9rem;
+        }
+        
+        .bilan-table th {
+            background-color: var(--bg-header);
+            color: var(--text-header);
+            padding: 15px;
+            text-align: right;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .bilan-table th:first-child { text-align: left; border-top-left-radius: 8px; }
+        .bilan-table th:last-child { border-top-right-radius: 8px; }
+
+        .bilan-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border-color);
+            text-align: right;
+        }
+        .bilan-table td:first-child { text-align: left; font-weight: 600; color: var(--text-main); }
+
+        .row-main { font-weight: 700; background-color: var(--bg-highlight); }
+        .row-sub { font-size: 0.85rem; color: var(--text-muted); font-weight: normal !important;}
+        .row-sub td:first-child { padding-left: 25px; }
+        
+        .row-brut { background-color: rgba(39, 174, 96, 0.1); color: var(--success); font-weight: bold; }
+        .row-brut td:first-child { border-left: 4px solid var(--success); }
+        
+        .txt-green { color: var(--success); }
+        .txt-red { color: var(--danger); }
+        .txt-blue { color: var(--accent-blue); }
+
+        /* --- BOITE SOLDE --- */
+        .balance-box {
+            background-color: var(--bg-header);
+            color: var(--text-header);
+            text-align: center;
+            padding: 30px;
+            border-radius: 12px;
+            margin-top: 40px;
+            font-family: 'Montserrat', sans-serif;
+            box-shadow: 0 10px 25px var(--shadow-card);
+            transition: background-color 0.3s;
+        }
+        .balance-box.positive { background-color: var(--success); }
+        .balance-box.negative { background-color: var(--danger); }
+        .balance-amount { font-size: 2.5rem; font-weight: 700; display: block; margin: 10px 0; }
+        .balance-sub { font-size: 0.85rem; opacity: 0.9; font-weight: 400; letter-spacing: 0.5px; }
+
+        /* --- TOOLBAR --- */
+        .toolbar {
+            width: 100%;
+            max-width: 1250px;
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .toolbar-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-card);
+            color: var(--text-main);
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .toolbar-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .toolbar-btn.primary { background-color: var(--success); color: #fff; border-color: var(--success); }
+        .toolbar-btn.primary:hover { background-color: #219a52; }
+        .toolbar-btn.accent { background-color: var(--accent-blue); color: #fff; border-color: var(--accent-blue); }
+        .toolbar-btn.accent:hover { background-color: #2980b9; }
+        .toolbar-btn.danger-btn { background-color: var(--danger); color: #fff; border-color: var(--danger); }
+        .toolbar-spacer { flex: 1; }
+
+        /* --- SIMULATION NAME INPUT --- */
+        .sim-name-input {
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-input);
+            color: var(--text-main);
+            font-family: 'Roboto', sans-serif;
+            font-size: 0.9rem;
+            width: 280px;
+            transition: border-color 0.3s;
+        }
+        .sim-name-input:focus { outline: none; border-color: var(--accent-blue); }
+        .sim-name-input::placeholder { color: var(--text-muted); }
+
+        /* --- MODAL --- */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(4px);
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            width: 90%;
+            max-width: 750px;
+            max-height: 80vh;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 25px 30px;
+            border-bottom: 1px solid var(--border-color);
+            background-color: var(--bg-element);
+        }
+        .modal-header h2 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0;
+            color: var(--text-main);
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            padding: 5px;
+            transition: color 0.2s;
+        }
+        .modal-close:hover { color: var(--danger); }
+        .modal-body {
+            padding: 25px 30px;
+            overflow-y: auto;
+            flex: 1;
+        }
+        .modal-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+        .modal-empty i { font-size: 2.5rem; margin-bottom: 15px; display: block; opacity: 0.4; }
+
+        /* --- SIMULATION LIST --- */
+        .sim-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 18px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            background-color: var(--bg-element);
+            transition: all 0.2s ease;
+        }
+        .sim-item:hover { border-color: var(--accent-blue); transform: translateX(3px); }
+        .sim-item-info { flex: 1; }
+        .sim-item-name {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--text-main);
+            margin-bottom: 4px;
+        }
+        .sim-item-detail {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .sim-item-detail span { display: flex; align-items: center; gap: 4px; }
+        .sim-item-actions { display: flex; gap: 8px; }
+        .sim-action-btn {
+            padding: 8px 14px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-card);
+            color: var(--text-main);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        .sim-action-btn:hover { background-color: var(--accent-blue); color: #fff; border-color: var(--accent-blue); }
+        .sim-action-btn.delete:hover { background-color: var(--danger); color: #fff; border-color: var(--danger); }
+
+        /* --- COMPARE VIEW --- */
+        .compare-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(4px);
+        }
+        .compare-overlay.active { display: flex; }
+        .compare-modal {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            width: 95%;
+            max-width: 1100px;
+            max-height: 85vh;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+        }
+        .compare-body { padding: 25px 30px; overflow-y: auto; flex: 1; }
+        .compare-selector {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .compare-selector select {
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-input);
+            color: var(--text-main);
+            font-family: 'Roboto', sans-serif;
+            font-size: 0.9rem;
+            min-width: 200px;
+            cursor: pointer;
+        }
+        .compare-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 0.85rem;
+        }
+        .compare-table th {
+            background-color: var(--bg-header);
+            color: var(--text-header);
+            padding: 12px 15px;
+            text-align: right;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+        .compare-table th:first-child { text-align: left; border-top-left-radius: 8px; }
+        .compare-table th:last-child { border-top-right-radius: 8px; }
+        .compare-table td {
+            padding: 10px 15px;
+            border-bottom: 1px solid var(--border-color);
+            text-align: right;
+        }
+        .compare-table td:first-child { text-align: left; font-weight: 600; }
+        .compare-highlight { background-color: rgba(39, 174, 96, 0.08); }
+        .compare-best { color: var(--success); font-weight: 700; }
+        .compare-worst { color: var(--danger); font-weight: 700; }
+
+        /* --- TOAST NOTIFICATION --- */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background-color: var(--success);
+            color: #fff;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+            font-size: 0.9rem;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            z-index: 3000;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.error { background-color: var(--danger); }
+
+        /* --- GRAPHIQUE RÉPARTITION --- */
+        .chart-section {
+            margin-top: 30px;
+            padding: 25px;
+            background-color: var(--bg-element);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+        }
+        .chart-container {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .donut-chart {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            position: relative;
+            flex-shrink: 0;
+        }
+        .donut-hole {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90px; height: 90px;
+            border-radius: 50%;
+            background-color: var(--bg-element);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        .donut-hole span { font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 0.8rem; }
+        .chart-legend {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85rem;
+        }
+        .legend-color {
+            width: 14px; height: 14px;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+        .legend-value {
+            font-weight: 700;
+            margin-left: auto;
+            padding-left: 15px;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        /* --- CALCUL INVERSÉ --- */
+        .reverse-section {
+            margin-top: 25px;
+            padding: 20px 25px;
+            background-color: var(--bg-element);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+        }
+        .reverse-result {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 12px;
+            padding: 12px 18px;
+            background-color: var(--bg-card);
+            border: 1px dashed var(--accent-blue);
+            border-radius: 8px;
+        }
+        .reverse-result i { color: var(--accent-blue); font-size: 1.2rem; }
+        .reverse-result .value {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--accent-blue);
+        }
+        .reverse-result .desc { font-size: 0.85rem; color: var(--text-muted); }
+
+        /* --- TABLEAUX DÉTAILLÉS --- */
+        .detail-section {
+            width: 100%;
+            max-width: 1250px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .detail-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: var(--shadow-card);
+            overflow-x: auto;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+        .detail-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 0.8rem;
+        }
+        .detail-table th {
+            background-color: var(--bg-header);
+            color: var(--text-header);
+            padding: 10px 8px;
+            text-align: right;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+        }
+        .detail-table th:first-child { text-align: left; border-top-left-radius: 8px; }
+        .detail-table th:last-child { border-top-right-radius: 8px; }
+        .detail-table td {
+            padding: 8px;
+            border-bottom: 1px solid var(--border-color);
+            text-align: right;
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
+        }
+        .detail-table td:first-child {
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+        .detail-table tbody tr:hover { background-color: var(--bg-element); }
+        .detail-table .row-total {
+            font-weight: 700;
+            background-color: var(--bg-highlight);
+            border-top: 2px solid var(--border-color);
+        }
+        .cumul-positive { color: var(--success); font-weight: 700; }
+        .cumul-negative { color: var(--danger); font-weight: 700; }
+        .detail-scrollable { max-height: 500px; overflow-y: auto; }
+
+        /* ==============================================
+           MEDIA QUERIES — RESPONSIVE MOBILE
+           ============================================== */
+
+        /* --- TABLETTES (max 992px) --- */
+        @media (max-width: 992px) {
+            .main-card {
+                grid-template-columns: 1fr;
+                gap: 30px;
+                padding: 30px;
+            }
+
+            .result-panel {
+                border-left: none;
+                padding-left: 0;
+                border-top: 1px solid var(--border-color);
+                padding-top: 30px;
+            }
+
+            /* Le left-panel (paramètres) apparaît avant le right-panel (résultats) */
+            .left-panel { order: 1; }
+            .right-panel { order: 2; }
+
+            .detail-section {
+                grid-template-columns: 1fr;
+            }
+
+            .toolbar {
+                flex-wrap: wrap;
+            }
+
+            .sim-name-input {
+                width: 100%;
+            }
+
+            .toolbar-spacer {
+                display: none;
+            }
+
+            .header-curved {
+                margin-top: 20px;
+                margin-bottom: 15px;
+            }
+        }
+
+        /* --- SMARTPHONES (max 600px) --- */
+        @media (max-width: 600px) {
+            body {
+                padding-left: 12px;
+                padding-right: 12px;
+                padding-bottom: 30px;
+            }
+
+            .header-curved {
+                margin-top: 15px;
+                margin-bottom: 12px;
+                padding: 18px 0;
+                border-radius: 10px;
+            }
+
+            .logo-area {
+                font-size: 1.5rem;
+                letter-spacing: 2px;
+            }
+
+            .theme-toggle {
+                top: 12px;
+                right: 12px;
+                padding: 8px 12px;
+                font-size: 1rem;
+            }
+
+            .main-card {
+                padding: 20px 15px;
+                border-radius: 10px;
+                gap: 25px;
+            }
+
+            h3 {
+                font-size: 0.9rem;
+                margin-bottom: 18px;
+            }
+
+            /* Toolbar : boutons empilés proprement */
+            .toolbar {
+                gap: 8px;
+            }
+
+            .toolbar-btn {
+                padding: 9px 14px;
+                font-size: 0.75rem;
+                flex: 1 1 calc(50% - 8px);
+                justify-content: center;
+                min-width: 0;
+            }
+
+            .sim-name-input {
+                width: 100%;
+                font-size: 0.85rem;
+            }
+
+            .toolbar-spacer {
+                display: none;
+            }
+
+            /* Formulaire : inputs pleine largeur */
+            .form-row {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .input-with-icon {
+                width: 100%;
+            }
+
+            .input-pct {
+                width: 100% !important;
+            }
+
+            label {
+                flex: 1 1 100%;
+                margin-bottom: 2px;
+            }
+
+            input[type="number"], input[type="text"] {
+                font-size: 16px; /* Empêche le zoom auto sur iOS */
+            }
+
+            /* Inputs inline dans form-row */
+            .form-row input[style*="width:80px"] {
+                width: 100% !important;
+            }
+
+            /* Options items */
+            .option-item {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .option-label {
+                flex: 1 1 100%;
+            }
+
+            .input-mini-simple {
+                width: 100%;
+            }
+
+            /* Tableau bilan : scroll horizontal si nécessaire */
+            .bilan-table {
+                font-size: 0.8rem;
+            }
+
+            .bilan-table th, .bilan-table td {
+                padding: 10px 8px;
+            }
+
+            /* Tableaux détaillés : scroll horizontal */
+            .detail-card {
+                padding: 15px 10px;
+                border-radius: 10px;
+            }
+
+            .detail-scrollable {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .detail-table {
+                min-width: 700px; /* Force le scroll horizontal */
+            }
+
+            /* Balance box */
+            .balance-box {
+                padding: 20px 15px;
+                margin-top: 25px;
+            }
+
+            .balance-amount {
+                font-size: 1.8rem;
+            }
+
+            /* Graphique */
+            .chart-section {
+                padding: 18px 12px;
+            }
+
+            .chart-container {
+                gap: 20px;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .donut-chart {
+                width: 150px;
+                height: 150px;
+            }
+
+            .donut-hole {
+                width: 75px;
+                height: 75px;
+            }
+
+            .chart-legend {
+                width: 100%;
+            }
+
+            /* Calcul inversé */
+            .reverse-section {
+                padding: 15px;
+            }
+
+            .reverse-result {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            /* Modals */
+            .modal {
+                width: 95%;
+                max-height: 90vh;
+                border-radius: 12px;
+            }
+
+            .modal-header {
+                padding: 18px 20px;
+            }
+
+            .modal-header h2 {
+                font-size: 0.95rem;
+            }
+
+            .modal-body {
+                padding: 18px 15px;
+            }
+
+            .sim-item {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .sim-item-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+
+            .compare-modal {
+                width: 98%;
+                max-height: 90vh;
+            }
+
+            .compare-body {
+                padding: 18px 12px;
+            }
+
+            .compare-selector {
+                flex-direction: column;
+                gap: 10px;
+                align-items: stretch;
+            }
+
+            .compare-selector select {
+                min-width: unset;
+                width: 100%;
+            }
+
+            .compare-table {
+                font-size: 0.75rem;
+            }
+
+            .compare-table th, .compare-table td {
+                padding: 8px 6px;
+            }
+
+            /* Toast */
+            .toast {
+                left: 12px;
+                right: 12px;
+                bottom: 15px;
+                font-size: 0.8rem;
+                padding: 12px 18px;
+                border-radius: 8px;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Changer le thème">
+        <i class="fas fa-moon"></i>
+    </button>
+
+    <div class="header-curved">
+        <div class="logo-area">
+            ASTREOS
+        </div>
+    </div>
+
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+        <input type="text" id="simName" class="sim-name-input" placeholder="Nom de la simulation (ex: Mission Client X)">
+        <button class="toolbar-btn primary" onclick="saveSimulation()">
+            <i class="fas fa-save"></i> Sauvegarder
+        </button>
+        <button class="toolbar-btn" onclick="openModal()">
+            <i class="fas fa-folder-open"></i> Mes Simulations
+        </button>
+        <button class="toolbar-btn accent" onclick="openCompare()">
+            <i class="fas fa-columns"></i> Comparer
+        </button>
+        <div class="toolbar-spacer"></div>
+        <button class="toolbar-btn" onclick="exportJSON()">
+            <i class="fas fa-download"></i> JSON
+        </button>
+        <button class="toolbar-btn" onclick="exportCSV()">
+            <i class="fas fa-file-csv"></i> CSV
+        </button>
+        <button class="toolbar-btn" onclick="exportPDF()">
+            <i class="fas fa-file-pdf"></i> PDF
+        </button>
+        <label class="toolbar-btn" style="margin:0;">
+            <i class="fas fa-upload"></i> Importer
+            <input type="file" id="importFile" accept=".json" onchange="importJSON(event)" style="display:none;">
+        </label>
+    </div>
+
+    <!-- MODAL : Mes Simulations -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2><i class="fas fa-folder-open"></i> Mes Simulations</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="simList"></div>
+        </div>
+    </div>
+
+    <!-- MODAL : Comparaison -->
+    <div class="compare-overlay" id="compareOverlay" onclick="closeCompare(event)">
+        <div class="compare-modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2><i class="fas fa-columns"></i> Comparaison de Scénarios</h2>
+                <button class="modal-close" onclick="closeCompare()">&times;</button>
+            </div>
+            <div class="compare-body">
+                <div class="compare-selector">
+                    <span style="font-weight:600; color:var(--text-muted);">Sélectionner :</span>
+                    <select id="compareA" onchange="renderCompare()"><option value="">-- Simulation A --</option></select>
+                    <span style="font-weight:700; color:var(--accent-blue);">VS</span>
+                    <select id="compareB" onchange="renderCompare()"><option value="">-- Simulation B --</option></select>
+                </div>
+                <div id="compareResult"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast"></div>
+
+    <div class="main-card">
+        
+        <div class="left-panel">
+            <h3><i class="fas fa-sliders-h"></i> Paramètres Mission</h3>
+            
+            <div class="form-group" style="background:var(--bg-element); padding:25px; border-radius:12px; border:1px solid var(--border-color);">
+                <div class="form-row">
+                    <label>TJM Client (HT)</label>
+                    <div class="input-with-icon">
+                        <input type="number" id="tjmClient" placeholder="0" oninput="updateFromClient()">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <label style="color:var(--accent-blue);">Marge Cible (%)</label>
+                    <input type="number" id="margePct" class="input-pct" placeholder="%" oninput="updateFromMargin()">
+                </div>
+                <div class="form-row">
+                    <label>TJM Consultant</label>
+                    <div class="input-with-icon">
+                        <input type="number" id="tjmConsultant" placeholder="Auto" oninput="updateFromConsultant()">
+                    </div>
+                </div>
+            </div>
+
+            <div style="height: 30px;"></div>
+
+            <div class="form-row">
+                <label>Nb Jours / Mois</label>
+                <input type="number" id="nbJours" value="20" oninput="calculateAll()" style="width:80px; padding:10px; text-align:center; border-radius:6px;">
+            </div>
+
+            <div class="form-row">
+                <label>Durée (Mois)</label>
+                <input type="number" id="nbMois" value="12" oninput="calculateAll()" style="width:80px; padding:10px; text-align:center; font-weight:bold; border-radius:6px;">
+            </div>
+
+            <h3 style="margin-top:40px;"><i class="fas fa-wallet"></i> Rémunération</h3>
+            
+            <div class="form-row">
+                <label>Salaire NET Mensuel</label>
+                <div class="input-with-icon">
+                    <input type="number" id="salaireCible" placeholder="ex: 2000" oninput="calculateAll()" style="font-weight:bold;">
+                </div>
+            </div>
+            <div class="form-row">
+                <label style="font-size:0.9rem; color:var(--text-muted);">Salaire BRUT (Estimé)</label>
+                <div class="input-with-icon">
+                    <input type="text" id="salaireBrutInfo" class="input-readonly" readonly value="0">
+                </div>
+            </div>
+
+            <h3 style="margin-top:40px;"><i class="fas fa-list-ul"></i> Options & Frais</h3>
+            
+            <div class="option-item">
+                <label class="option-label">
+                    <input type="checkbox" id="opt_indem_check" onchange="calculateAll()"> Indemnités journalières
+                </label>
+                <div>
+                    <input type="number" id="opt_indem_val" value="0" oninput="calculateAll()" class="input-mini-simple">
+                </div>
+            </div>
+
+            <div class="option-item">
+                <label class="option-label">
+                    <input type="checkbox" id="opt_frais_check" onchange="calculateAll()"> Frais ACREED
+                </label>
+                <div>
+                    <input type="number" id="opt_frais_val" value="0" oninput="calculateAll()" class="input-mini-simple">
+                </div>
+            </div>
+
+            <div class="option-item">
+                <label class="option-label">
+                    <input type="checkbox" id="opt_ppv_check" onchange="calculateAll()"> PPV (Prime)
+                </label>
+                <div>
+                    <input type="number" id="opt_ppv_val" value="0" oninput="calculateAll()" class="input-mini-simple">
+                </div>
+            </div>
+
+            <div class="option-item">
+                <label class="option-label">
+                    <input type="checkbox" id="opt_cse_check" onchange="calculateAll()"> CSE
+                </label>
+                <div>
+                    <input type="number" id="opt_cse_val" value="0" oninput="calculateAll()" class="input-mini-simple">
+                </div>
+            </div>
+
+            <div class="option-item">
+                <label class="option-label">
+                    <input type="checkbox" id="opt_voiture_check" onchange="calculateAll()"> Voiture
+                </label>
+                <div>
+                    <input type="number" id="opt_voiture_val" value="0" oninput="calculateAll()" class="input-mini-simple">
+                </div>
+            </div>
+
+            <div class="option-item">
+                <label class="option-label">
+                    <input type="checkbox" id="opt_hs_check" onchange="calculateAll()"> Heures Supplémentaires
+                </label>
+                <div>
+                    <input type="number" id="opt_hs_val" value="0" oninput="calculateAll()" class="input-mini-simple">
+                </div>
+            </div>
+
+            <div class="option-item">
+                <label class="option-label">
+                    <input type="checkbox" id="opt_prime_check" onchange="calculateAll()"> Prime exceptionnelle
+                </label>
+                <div>
+                    <input type="number" id="opt_prime_val" value="0" oninput="calculateAll()" class="input-mini-simple" placeholder="Net">
+                </div>
+            </div>
+        </div>
+
+        <div class="right-panel result-panel">
+            <h3><i class="fas fa-chart-line"></i> Bilan Financier</h3>
+            
+            <table class="bilan-table">
+                <thead>
+                    <tr>
+                        <th>Poste</th>
+                        <th>Mensuel</th>
+                        <th>Total (<span id="lbl_mois_total">12</span> mois)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="row-main">
+                        <td>CA Facturé Client</td>
+                        <td class="txt-green" id="res_ca_m">0 €</td>
+                        <td class="txt-green" id="res_ca_t">0 €</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size:0.85rem; color:var(--text-muted);">- Marge Société</td>
+                        <td id="res_marge_m" style="color:var(--text-muted);">0 €</td>
+                        <td id="res_marge_t" style="color:var(--text-muted);">0 €</td>
+                    </tr>
+                    <tr style="background-color: rgba(52, 152, 219, 0.1);">
+                        <td class="txt-blue" style="font-weight:bold;">Enveloppe Dispo</td>
+                        <td class="txt-blue" style="font-weight:bold;" id="res_env_m">0 €</td>
+                        <td class="txt-blue" style="font-weight:bold;" id="res_env_t">0 €</td>
+                    </tr>
+
+                    <tr><td colspan="3" style="height:25px; border:none;"></td></tr>
+
+                    <tr style="background-color: rgba(39, 174, 96, 0.1);">
+                        <td style="font-weight:bold; color:var(--accent-green);">Rémunération NET totale salarié</td>
+                        <td style="font-weight:bold; font-size:1.1rem; color:var(--accent-green);" id="res_net_total_m">0 €</td>
+                        <td style="font-weight:bold; font-size:1.1rem; color:var(--accent-green);" id="res_net_total_t">0 €</td>
+                    </tr>
+
+                    <tr><td colspan="3" style="height:25px; border:none;"></td></tr>
+
+                    <tr class="row-main">
+                        <td>Salaire NET</td>
+                        <td style="font-size:1.1rem;" id="res_net_m">0 €</td>
+                        <td style="font-size:1.1rem;" id="res_net_t">0 €</td>
+                    </tr>
+                    <tr class="row-sub">
+                        <td>+ Charges Salariales (~23%)</td>
+                        <td class="txt-red" id="res_chg_sal_m">0 €</td>
+                        <td class="txt-red" id="res_chg_sal_t">0 €</td>
+                    </tr>
+                    
+                    <tr class="row-brut">
+                        <td>= SALAIRE BRUT</td>
+                        <td id="res_brut_m">0 €</td>
+                        <td id="res_brut_t">0 €</td>
+                    </tr>
+
+                    <tr class="row-sub">
+                        <td>+ Charges Patronales (~42%)</td>
+                        <td class="txt-red" id="res_chg_pat_m">0 €</td>
+                        <td class="txt-red" id="res_chg_pat_t">0 €</td>
+                    </tr>
+                    <tr class="row-sub" style="color:#e67e22;">
+                        <td>+ Prov. Congés Payés (10%)</td>
+                        <td id="res_cp_m">0 €</td>
+                        <td id="res_cp_t">0 €</td>
+                    </tr>
+                    <tr style="border-top:1px dashed var(--border-color);">
+                        <td class="txt-red" style="font-weight:bold;">Coût Salaire Chargé</td>
+                        <td class="txt-red" style="font-weight:bold;" id="res_cout_sal_m">0 €</td>
+                        <td class="txt-red" style="font-weight:bold;" id="res_cout_sal_t">0 €</td>
+                    </tr>
+
+                    <tr><td colspan="3" style="height:25px; border:none;"></td></tr>
+
+                    <tr class="row-main">
+                        <td>Total Options & Frais</td>
+                        <td class="txt-red" id="res_opt_tot_m">0 €</td>
+                        <td class="txt-red" id="res_opt_tot_t">0 €</td>
+                    </tr>
+                    <tr class="row-sub">
+                        <td>dont Indemnités / Frais Acreed</td>
+                        <td id="res_opt_indem_m">0 €</td>
+                        <td id="res_opt_indem_t">0 €</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div id="soldeBox" class="balance-box">
+                <span style="font-size:1rem; text-transform:uppercase; opacity:0.8;">Solde Mission</span><br>
+                <span class="balance-amount">0 €</span>
+                <span class="balance-sub">(Enveloppe - Salaire chargé - Options)</span>
+            </div>
+
+            <!-- GRAPHIQUE RÉPARTITION -->
+            <div class="chart-section">
+                <h3 style="margin-bottom:20px;"><i class="fas fa-chart-pie"></i> Répartition de l'Enveloppe</h3>
+                <div class="chart-container">
+                    <div class="donut-chart" id="donutChart">
+                        <div class="donut-hole">
+                            <span id="donutPct">0%</span>
+                            <span style="font-size:0.65rem; color:var(--text-muted);">utilisé</span>
+                        </div>
+                    </div>
+                    <div class="chart-legend" id="chartLegend"></div>
+                </div>
+            </div>
+
+            <!-- CALCUL INVERSÉ -->
+            <div class="reverse-section">
+                <h3 style="margin-bottom:5px;"><i class="fas fa-calculator"></i> TJM Client Minimum</h3>
+                <p style="font-size:0.85rem; color:var(--text-muted); margin-top:0;">Pour couvrir le salaire NET et les options avec la marge actuelle :</p>
+                <div class="reverse-result">
+                    <i class="fas fa-bullseye"></i>
+                    <div>
+                        <div class="value" id="reverseTJM">— €</div>
+                        <div class="desc">TJM Client minimum requis (HT/jour)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- TABLEAUX DÉTAILLÉS -->
+    <div class="detail-section">
+        <!-- Tableau Mensuel -->
+        <div class="detail-card">
+            <h3><i class="fas fa-calendar-alt"></i> Détail Mensuel</h3>
+            <div class="detail-scrollable">
+                <table class="detail-table">
+                    <thead>
+                        <tr>
+                            <th>Mois</th>
+                            <th>CA Facturé</th>
+                            <th>Enveloppe</th>
+                            <th>NET</th>
+                            <th>BRUT</th>
+                            <th>Charges</th>
+                            <th>Options</th>
+                            <th>Solde</th>
+                            <th>Cumulé</th>
+                        </tr>
+                    </thead>
+                    <tbody id="monthlyBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tableau Annuel -->
+        <div class="detail-card">
+            <h3><i class="fas fa-chart-bar"></i> Récapitulatif Annuel</h3>
+            <div class="detail-scrollable">
+                <table class="detail-table">
+                    <thead>
+                        <tr>
+                            <th>Période</th>
+                            <th>CA Facturé</th>
+                            <th>Enveloppe</th>
+                            <th>NET</th>
+                            <th>BRUT</th>
+                            <th>Charges</th>
+                            <th>Options</th>
+                            <th>Solde</th>
+                            <th>Cumulé</th>
+                        </tr>
+                    </thead>
+                    <tbody id="yearlyBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // --- GESTION DU THEME ---
+    const toggleBtn = document.getElementById('themeToggle');
+    const icon = toggleBtn.querySelector('i');
+    const htmlEl = document.documentElement;
+
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+        htmlEl.setAttribute('data-theme', 'dark');
+        icon.classList.replace('fa-moon', 'fa-sun');
+    }
+
+    function toggleTheme() {
+        if (htmlEl.getAttribute('data-theme') === 'dark') {
+            htmlEl.removeAttribute('data-theme');
+            icon.classList.replace('fa-sun', 'fa-moon');
+            localStorage.setItem('theme', 'light');
+        } else {
+            htmlEl.setAttribute('data-theme', 'dark');
+            icon.classList.replace('fa-moon', 'fa-sun');
+            localStorage.setItem('theme', 'dark');
+        }
+    }
+
+
+    // --- MOTEUR DE CALCUL (LOGIQUE V6) ---
+    function updateFromClient() {
+        const c = parseFloat(document.getElementById('tjmClient').value) || 0;
+        const m = parseFloat(document.getElementById('margePct').value) || 0;
+        if (m > 0 && c > 0) document.getElementById('tjmConsultant').value = (c * (1 - (m / 100))).toFixed(2);
+        calculateAll();
+    }
+    function updateFromMargin() {
+        const c = parseFloat(document.getElementById('tjmClient').value) || 0;
+        const m = parseFloat(document.getElementById('margePct').value) || 0;
+        if (c > 0) document.getElementById('tjmConsultant').value = (c * (1 - (m / 100))).toFixed(2);
+        calculateAll();
+    }
+    function updateFromConsultant() {
+        const c = parseFloat(document.getElementById('tjmClient').value) || 0;
+        const co = parseFloat(document.getElementById('tjmConsultant').value) || 0;
+        if (c > 0 && co > 0) document.getElementById('margePct').value = (((c - co) / c) * 100).toFixed(2);
+        calculateAll();
+    }
+
+    function calculateAll() {
+        const tjmClient = parseFloat(document.getElementById('tjmClient').value) || 0;
+        const tjmConsultant = parseFloat(document.getElementById('tjmConsultant').value) || 0;
+        const nbJours = parseFloat(document.getElementById('nbJours').value) || 0;
+        const nbMois = parseFloat(document.getElementById('nbMois').value) || 0;
+        const salaireNet = parseFloat(document.getElementById('salaireCible').value) || 0;
+
+        document.getElementById('lbl_mois_total').innerText = nbMois;
+
+        const RATIO_SALARIAL = 0.23; 
+        const RATIO_PATRONAL = 0.42; 
+        const RATIO_CP = 0.10; 
+
+        let salaireBrut = 0;
+        if (salaireNet > 0) {
+            salaireBrut = salaireNet / (1 - RATIO_SALARIAL);
+        }
+
+        const chgSalariales = salaireBrut * RATIO_SALARIAL;
+        const chgPatronales = salaireBrut * RATIO_PATRONAL;
+        const provisionCP = salaireBrut * RATIO_CP;
+        const coutTotalSalaire = salaireBrut + chgPatronales + provisionCP;
+
+        function getOpt(chk, val) {
+            if(document.getElementById(chk).checked) return parseFloat(document.getElementById(val).value) || 0;
+            return 0;
+        }
+        
+        const valIndem = getOpt('opt_indem_check', 'opt_indem_val');
+        const coutIndemMensuel = valIndem * nbJours;
+        
+        let coutAutresMensuel = 0;
+        coutAutresMensuel += getOpt('opt_frais_check', 'opt_frais_val');
+        coutAutresMensuel += getOpt('opt_ppv_check', 'opt_ppv_val');
+        coutAutresMensuel += getOpt('opt_cse_check', 'opt_cse_val');
+        coutAutresMensuel += getOpt('opt_voiture_check', 'opt_voiture_val');
+        coutAutresMensuel += getOpt('opt_hs_check', 'opt_hs_val');
+
+        const primeNet = getOpt('opt_prime_check', 'opt_prime_val');
+        let coutPrimeEmployeur = 0;
+        if (primeNet > 0) {
+            const primeBrut = primeNet / (1 - RATIO_SALARIAL);
+            coutPrimeEmployeur = primeBrut + (primeBrut * RATIO_PATRONAL);
+        }
+
+        const totalOptionsMensuel = coutIndemMensuel + coutAutresMensuel + coutPrimeEmployeur;
+
+        const caMensuel = tjmClient * nbJours;
+        const envMensuelle = tjmConsultant * nbJours;
+        const margeMensuelle = caMensuel - envMensuelle;
+        const soldeMensuel = envMensuelle - coutTotalSalaire - totalOptionsMensuel;
+        const mult = nbMois;
+        const soldeTotal = soldeMensuel * mult;
+
+        const fmt = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+        const fmtNoSym = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 });
+        
+        document.getElementById('salaireBrutInfo').value = fmtNoSym.format(salaireBrut);
+
+        function row(id, valM) {
+            document.getElementById(id + '_m').innerText = fmt.format(valM);
+            document.getElementById(id + '_t').innerText = fmt.format(valM * mult);
+        }
+
+        row('res_ca', caMensuel);
+        row('res_marge', margeMensuelle);
+        row('res_env', envMensuelle);
+        
+        row('res_net', salaireNet);
+        row('res_chg_sal', chgSalariales);
+        row('res_brut', salaireBrut);
+        row('res_chg_pat', chgPatronales);
+        row('res_cp', provisionCP);
+        row('res_cout_sal', coutTotalSalaire);
+        
+        row('res_opt_tot', totalOptionsMensuel);
+        row('res_opt_indem', coutIndemMensuel + getOpt('opt_frais_check', 'opt_frais_val'));
+
+        const remuNetTotale = salaireNet + coutIndemMensuel + getOpt('opt_ppv_check', 'opt_ppv_val') + primeNet + getOpt('opt_hs_check', 'opt_hs_val');
+        row('res_net_total', remuNetTotale); 
+
+        const box = document.getElementById('soldeBox');
+        box.classList.remove('positive', 'negative');
+        box.querySelector('.balance-amount').innerText = fmt.format(soldeTotal);
+        
+        if (tjmClient > 0) {
+            if (soldeTotal >= 0) {
+                box.classList.add('positive');
+                box.querySelector('.balance-sub').innerText = "✅ Le budget couvre les dépenses.";
+            } else {
+                box.classList.add('negative');
+                box.querySelector('.balance-sub').innerText = "⚠️ DÉFICIT ! Le TJM ne couvre pas le salaire demandé.";
+            }
+        }
+
+        // --- GRAPHIQUE DONUT ---
+        updateDonut(envMensuelle, coutTotalSalaire, totalOptionsMensuel, soldeMensuel);
+
+        // --- CALCUL INVERSÉ ---
+        updateReverseTJM(coutTotalSalaire, totalOptionsMensuel, nbJours, parseFloat(document.getElementById('margePct').value) || 0);
+
+        // --- TABLEAUX DÉTAILLÉS ---
+        updateDetailTables(nbMois, caMensuel, envMensuelle, salaireNet, salaireBrut, coutTotalSalaire, totalOptionsMensuel, soldeMensuel);
+    }
+
+    // --- GRAPHIQUE DONUT ---
+    function updateDonut(enveloppe, coutSalaire, options, solde) {
+        const chart = document.getElementById('donutChart');
+        const legend = document.getElementById('chartLegend');
+        const pctEl = document.getElementById('donutPct');
+
+        if (enveloppe <= 0) {
+            chart.style.background = 'var(--border-color)';
+            pctEl.textContent = '0%';
+            legend.innerHTML = '';
+            return;
+        }
+
+        const items = [
+            { label: 'Salaire chargé', value: coutSalaire, color: '#e74c3c' },
+            { label: 'Options & Frais', value: options, color: '#e67e22' },
+            { label: solde >= 0 ? 'Excédent' : 'Déficit', value: Math.max(solde, 0), color: '#27ae60' }
+        ];
+        const total = coutSalaire + options + Math.max(solde, 0);
+        const used = ((coutSalaire + options) / enveloppe * 100);
+        pctEl.textContent = Math.min(used, 999).toFixed(0) + '%';
+
+        let gradient = '';
+        let cumul = 0;
+        const fmt = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+
+        items.forEach(item => {
+            const pct = total > 0 ? (item.value / total * 100) : 0;
+            gradient += (gradient ? ', ' : '') + item.color + ' ' + cumul + '% ' + (cumul + pct) + '%';
+            cumul += pct;
+        });
+
+        chart.style.background = 'conic-gradient(' + gradient + ')';
+
+        legend.innerHTML = items.map(item => {
+            const pct = total > 0 ? (item.value / total * 100).toFixed(1) : '0.0';
+            return '<div class="legend-item">' +
+                '<div class="legend-color" style="background:' + item.color + '"></div>' +
+                '<span>' + item.label + ' (' + pct + '%)</span>' +
+                '<span class="legend-value">' + fmt.format(item.value) + '</span>' +
+            '</div>';
+        }).join('');
+    }
+
+    // --- CALCUL INVERSÉ ---
+    function updateReverseTJM(coutSalaire, options, nbJours, margePct) {
+        const el = document.getElementById('reverseTJM');
+        if (nbJours <= 0 || coutSalaire <= 0) { el.textContent = '— €'; return; }
+        const tjmConsultantMin = (coutSalaire + options) / nbJours;
+        const tjmClientMin = margePct < 100 ? tjmConsultantMin / (1 - margePct / 100) : tjmConsultantMin;
+        const fmt = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+        el.textContent = fmt.format(tjmClientMin);
+    }
+
+    // --- TABLEAUX DÉTAILLÉS (MENSUEL + ANNUEL) ---
+    function updateDetailTables(nbMois, caMensuel, envMensuelle, salaireNet, salaireBrut, coutSalaire, totalOptions, soldeMensuel) {
+        const fmt = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+        const charges = coutSalaire - salaireBrut;
+        const monthlyBody = document.getElementById('monthlyBody');
+        const yearlyBody = document.getElementById('yearlyBody');
+
+        if (nbMois <= 0 || caMensuel <= 0) {
+            monthlyBody.innerHTML = '<tr><td colspan="9" style="text-align:center; color:var(--text-muted); padding:20px;">Renseignez les paramètres pour voir le détail.</td></tr>';
+            yearlyBody.innerHTML = '<tr><td colspan="9" style="text-align:center; color:var(--text-muted); padding:20px;">Renseignez les paramètres pour voir le détail.</td></tr>';
+            return;
+        }
+
+        // --- Tableau Mensuel ---
+        let cumul = 0;
+        let monthRows = '';
+        for (let m = 1; m <= nbMois; m++) {
+            cumul += soldeMensuel;
+            const cumulClass = cumul >= 0 ? 'cumul-positive' : 'cumul-negative';
+            const soldeClass = soldeMensuel >= 0 ? 'txt-green' : 'txt-red';
+            monthRows += '<tr>' +
+                '<td>Mois ' + m + '</td>' +
+                '<td class="txt-green">' + fmt.format(caMensuel) + '</td>' +
+                '<td class="txt-blue">' + fmt.format(envMensuelle) + '</td>' +
+                '<td>' + fmt.format(salaireNet) + '</td>' +
+                '<td>' + fmt.format(salaireBrut) + '</td>' +
+                '<td class="txt-red">' + fmt.format(charges) + '</td>' +
+                '<td class="txt-red">' + fmt.format(totalOptions) + '</td>' +
+                '<td class="' + soldeClass + '">' + fmt.format(soldeMensuel) + '</td>' +
+                '<td class="' + cumulClass + '">' + fmt.format(cumul) + '</td>' +
+            '</tr>';
+        }
+        // Ligne total
+        monthRows += '<tr class="row-total">' +
+            '<td>TOTAL</td>' +
+            '<td class="txt-green">' + fmt.format(caMensuel * nbMois) + '</td>' +
+            '<td class="txt-blue">' + fmt.format(envMensuelle * nbMois) + '</td>' +
+            '<td>' + fmt.format(salaireNet * nbMois) + '</td>' +
+            '<td>' + fmt.format(salaireBrut * nbMois) + '</td>' +
+            '<td class="txt-red">' + fmt.format(charges * nbMois) + '</td>' +
+            '<td class="txt-red">' + fmt.format(totalOptions * nbMois) + '</td>' +
+            '<td class="' + (soldeMensuel * nbMois >= 0 ? 'txt-green' : 'txt-red') + '">' + fmt.format(soldeMensuel * nbMois) + '</td>' +
+            '<td class="' + (cumul >= 0 ? 'cumul-positive' : 'cumul-negative') + '">' + fmt.format(cumul) + '</td>' +
+        '</tr>';
+        monthlyBody.innerHTML = monthRows;
+
+        // --- Tableau Annuel ---
+        let yearRows = '';
+        let yearCumul = 0;
+        if (nbMois <= 12) {
+            yearCumul = soldeMensuel * nbMois;
+            const cls = yearCumul >= 0 ? 'cumul-positive' : 'cumul-negative';
+            const soldeClass = yearCumul >= 0 ? 'txt-green' : 'txt-red';
+            yearRows = '<tr class="row-total">' +
+                '<td>Total (' + nbMois + ' mois)</td>' +
+                '<td class="txt-green">' + fmt.format(caMensuel * nbMois) + '</td>' +
+                '<td class="txt-blue">' + fmt.format(envMensuelle * nbMois) + '</td>' +
+                '<td>' + fmt.format(salaireNet * nbMois) + '</td>' +
+                '<td>' + fmt.format(salaireBrut * nbMois) + '</td>' +
+                '<td class="txt-red">' + fmt.format(charges * nbMois) + '</td>' +
+                '<td class="txt-red">' + fmt.format(totalOptions * nbMois) + '</td>' +
+                '<td class="' + soldeClass + '">' + fmt.format(yearCumul) + '</td>' +
+                '<td class="' + cls + '">' + fmt.format(yearCumul) + '</td>' +
+            '</tr>';
+        } else {
+            let remaining = nbMois;
+            let yearNum = 1;
+            while (remaining > 0) {
+                const moisCeAn = Math.min(12, remaining);
+                const soldeAn = soldeMensuel * moisCeAn;
+                yearCumul += soldeAn;
+                const cls = yearCumul >= 0 ? 'cumul-positive' : 'cumul-negative';
+                const soldeClass = soldeAn >= 0 ? 'txt-green' : 'txt-red';
+                yearRows += '<tr>' +
+                    '<td>Année ' + yearNum + ' (' + moisCeAn + ' mois)</td>' +
+                    '<td class="txt-green">' + fmt.format(caMensuel * moisCeAn) + '</td>' +
+                    '<td class="txt-blue">' + fmt.format(envMensuelle * moisCeAn) + '</td>' +
+                    '<td>' + fmt.format(salaireNet * moisCeAn) + '</td>' +
+                    '<td>' + fmt.format(salaireBrut * moisCeAn) + '</td>' +
+                    '<td class="txt-red">' + fmt.format(charges * moisCeAn) + '</td>' +
+                    '<td class="txt-red">' + fmt.format(totalOptions * moisCeAn) + '</td>' +
+                    '<td class="' + soldeClass + '">' + fmt.format(soldeAn) + '</td>' +
+                    '<td class="' + cls + '">' + fmt.format(yearCumul) + '</td>' +
+                '</tr>';
+                remaining -= moisCeAn;
+                yearNum++;
+            }
+            // Ligne total global
+            yearRows += '<tr class="row-total">' +
+                '<td>TOTAL</td>' +
+                '<td class="txt-green">' + fmt.format(caMensuel * nbMois) + '</td>' +
+                '<td class="txt-blue">' + fmt.format(envMensuelle * nbMois) + '</td>' +
+                '<td>' + fmt.format(salaireNet * nbMois) + '</td>' +
+                '<td>' + fmt.format(salaireBrut * nbMois) + '</td>' +
+                '<td class="txt-red">' + fmt.format(charges * nbMois) + '</td>' +
+                '<td class="txt-red">' + fmt.format(totalOptions * nbMois) + '</td>' +
+                '<td class="' + (yearCumul >= 0 ? 'txt-green' : 'txt-red') + '">' + fmt.format(yearCumul) + '</td>' +
+                '<td class="' + (yearCumul >= 0 ? 'cumul-positive' : 'cumul-negative') + '">' + fmt.format(yearCumul) + '</td>' +
+            '</tr>';
+        }
+        yearlyBody.innerHTML = yearRows;
+    }
+
+    // --- TOAST NOTIFICATION ---
+    function showToast(message, isError) {
+        const toast = document.getElementById('toast');
+        toast.innerHTML = '<i class="fas fa-' + (isError ? 'exclamation-circle' : 'check-circle') + '"></i> ' + message;
+        toast.className = 'toast' + (isError ? ' error' : '');
+        requestAnimationFrame(() => toast.classList.add('show'));
+        setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    // --- PHASE 1 : SAUVEGARDE & GESTION ---
+    const STORAGE_KEY = 'astreos_simulations';
+
+    function getSimulations() {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    }
+
+    function collectInputs() {
+        return {
+            tjmClient: document.getElementById('tjmClient').value,
+            margePct: document.getElementById('margePct').value,
+            tjmConsultant: document.getElementById('tjmConsultant').value,
+            nbJours: document.getElementById('nbJours').value,
+            nbMois: document.getElementById('nbMois').value,
+            salaireCible: document.getElementById('salaireCible').value,
+            opt_indem_check: document.getElementById('opt_indem_check').checked,
+            opt_indem_val: document.getElementById('opt_indem_val').value,
+            opt_frais_check: document.getElementById('opt_frais_check').checked,
+            opt_frais_val: document.getElementById('opt_frais_val').value,
+            opt_ppv_check: document.getElementById('opt_ppv_check').checked,
+            opt_ppv_val: document.getElementById('opt_ppv_val').value,
+            opt_cse_check: document.getElementById('opt_cse_check').checked,
+            opt_cse_val: document.getElementById('opt_cse_val').value,
+            opt_voiture_check: document.getElementById('opt_voiture_check').checked,
+            opt_voiture_val: document.getElementById('opt_voiture_val').value,
+            opt_hs_check: document.getElementById('opt_hs_check').checked,
+            opt_hs_val: document.getElementById('opt_hs_val').value,
+            opt_prime_check: document.getElementById('opt_prime_check').checked,
+            opt_prime_val: document.getElementById('opt_prime_val').value
+        };
+    }
+
+    function computeResults(d) {
+        const tjmClient = parseFloat(d.tjmClient) || 0;
+        const tjmConsultant = parseFloat(d.tjmConsultant) || 0;
+        const nbJours = parseFloat(d.nbJours) || 0;
+        const nbMois = parseFloat(d.nbMois) || 0;
+        const salaireNet = parseFloat(d.salaireCible) || 0;
+        const salaireBrut = salaireNet > 0 ? salaireNet / (1 - 0.23) : 0;
+        const chgPat = salaireBrut * 0.42;
+        const provCP = salaireBrut * 0.10;
+        const coutSalaire = salaireBrut + chgPat + provCP;
+        function optVal(chk, val) { return d[chk] ? (parseFloat(d[val]) || 0) : 0; }
+        const indem = optVal('opt_indem_check', 'opt_indem_val') * nbJours;
+        const frais = optVal('opt_frais_check', 'opt_frais_val');
+        const ppv = optVal('opt_ppv_check', 'opt_ppv_val');
+        const cse = optVal('opt_cse_check', 'opt_cse_val');
+        const voiture = optVal('opt_voiture_check', 'opt_voiture_val');
+        const hs = optVal('opt_hs_check', 'opt_hs_val');
+        const primeNet = optVal('opt_prime_check', 'opt_prime_val');
+        let coutPrime = 0;
+        if (primeNet > 0) {
+            const primeBrut = primeNet / (1 - 0.23);
+            coutPrime = primeBrut + (primeBrut * 0.42);
+        }
+        const totalOptions = indem + frais + ppv + cse + voiture + hs + coutPrime;
+        const caMensuel = tjmClient * nbJours;
+        const envMensuelle = tjmConsultant * nbJours;
+        const margeMensuelle = caMensuel - envMensuelle;
+        const soldeMensuel = envMensuelle - coutSalaire - totalOptions;
+        return {
+            tjmClient, tjmConsultant, nbJours, nbMois, salaireNet, salaireBrut,
+            caMensuel, envMensuelle, margeMensuelle,
+            coutSalaire, totalOptions,
+            soldeMensuel, soldeTotal: soldeMensuel * nbMois,
+            margePct: tjmClient > 0 ? ((tjmClient - tjmConsultant) / tjmClient * 100) : 0
+        };
+    }
+
+    function saveSimulation() {
+        const name = document.getElementById('simName').value.trim();
+        if (!name) { showToast('Veuillez entrer un nom pour la simulation.', true); return; }
+        const sims = getSimulations();
+        const existing = sims.findIndex(s => s.name === name);
+        const sim = {
+            name: name,
+            date: new Date().toISOString(),
+            data: collectInputs()
+        };
+        if (existing >= 0) {
+            sims[existing] = sim;
+            showToast('Simulation "' + name + '" mise à jour.');
+        } else {
+            sims.push(sim);
+            showToast('Simulation "' + name + '" sauvegardée.');
+        }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(sims));
+    }
+
+    function loadSimulation(index) {
+        const sims = getSimulations();
+        const sim = sims[index];
+        if (!sim) return;
+        const d = sim.data;
+        document.getElementById('simName').value = sim.name;
+        document.getElementById('tjmClient').value = d.tjmClient;
+        document.getElementById('margePct').value = d.margePct;
+        document.getElementById('tjmConsultant').value = d.tjmConsultant;
+        document.getElementById('nbJours').value = d.nbJours;
+        document.getElementById('nbMois').value = d.nbMois;
+        document.getElementById('salaireCible').value = d.salaireCible;
+        document.getElementById('opt_indem_check').checked = d.opt_indem_check;
+        document.getElementById('opt_indem_val').value = d.opt_indem_val;
+        document.getElementById('opt_frais_check').checked = d.opt_frais_check;
+        document.getElementById('opt_frais_val').value = d.opt_frais_val;
+        document.getElementById('opt_ppv_check').checked = d.opt_ppv_check;
+        document.getElementById('opt_ppv_val').value = d.opt_ppv_val;
+        document.getElementById('opt_cse_check').checked = d.opt_cse_check;
+        document.getElementById('opt_cse_val').value = d.opt_cse_val;
+        document.getElementById('opt_voiture_check').checked = d.opt_voiture_check;
+        document.getElementById('opt_voiture_val').value = d.opt_voiture_val;
+        document.getElementById('opt_hs_check').checked = d.opt_hs_check || false;
+        document.getElementById('opt_hs_val').value = d.opt_hs_val || 0;
+        document.getElementById('opt_prime_check').checked = d.opt_prime_check || false;
+        document.getElementById('opt_prime_val').value = d.opt_prime_val || 0;
+        calculateAll();
+        closeModal();
+        showToast('Simulation "' + sim.name + '" chargée.');
+    }
+
+    function deleteSimulation(index) {
+        const sims = getSimulations();
+        const name = sims[index].name;
+        if (!confirm('Supprimer la simulation "' + name + '" ?')) return;
+        sims.splice(index, 1);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(sims));
+        renderSimList();
+        showToast('Simulation "' + name + '" supprimée.');
+    }
+
+    // --- MODAL ---
+    function openModal() {
+        renderSimList();
+        document.getElementById('modalOverlay').classList.add('active');
+    }
+    function closeModal(e) {
+        if (e && e.target !== e.currentTarget) return;
+        document.getElementById('modalOverlay').classList.remove('active');
+    }
+
+    function renderSimList() {
+        const sims = getSimulations();
+        const container = document.getElementById('simList');
+        if (sims.length === 0) {
+            container.innerHTML = '<div class="modal-empty"><i class="fas fa-inbox"></i>Aucune simulation sauvegardée.</div>';
+            return;
+        }
+        const fmt = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+        container.innerHTML = sims.map((sim, i) => {
+            const r = computeResults(sim.data);
+            const dateStr = new Date(sim.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            const soldeClass = r.soldeTotal >= 0 ? 'txt-green' : 'txt-red';
+            return '<div class="sim-item">' +
+                '<div class="sim-item-info">' +
+                    '<div class="sim-item-name">' + sim.name + '</div>' +
+                    '<div class="sim-item-detail">' +
+                        '<span><i class="fas fa-calendar-alt"></i> ' + dateStr + '</span>' +
+                        '<span><i class="fas fa-euro-sign"></i> TJM ' + r.tjmClient + '€</span>' +
+                        '<span><i class="fas fa-user"></i> NET ' + fmt.format(r.salaireNet) + '</span>' +
+                        '<span class="' + soldeClass + '"><i class="fas fa-balance-scale"></i> Solde ' + fmt.format(r.soldeTotal) + '</span>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="sim-item-actions">' +
+                    '<button class="sim-action-btn" onclick="loadSimulation(' + i + ')"><i class="fas fa-upload"></i> Charger</button>' +
+                    '<button class="sim-action-btn delete" onclick="deleteSimulation(' + i + ')"><i class="fas fa-trash"></i></button>' +
+                '</div>' +
+            '</div>';
+        }).join('');
+    }
+
+    // --- PHASE 2 : COMPARAISON ---
+    function openCompare() {
+        const sims = getSimulations();
+        if (sims.length < 2) { showToast('Il faut au moins 2 simulations sauvegardées pour comparer.', true); return; }
+        const optionsHTML = '<option value="">-- Choisir --</option>' +
+            sims.map((s, i) => '<option value="' + i + '">' + s.name + '</option>').join('');
+        document.getElementById('compareA').innerHTML = optionsHTML;
+        document.getElementById('compareB').innerHTML = optionsHTML;
+        document.getElementById('compareResult').innerHTML = '';
+        document.getElementById('compareOverlay').classList.add('active');
+    }
+    function closeCompare(e) {
+        if (e && e.target !== e.currentTarget) return;
+        document.getElementById('compareOverlay').classList.remove('active');
+    }
+
+    function renderCompare() {
+        const sims = getSimulations();
+        const iA = document.getElementById('compareA').value;
+        const iB = document.getElementById('compareB').value;
+        if (iA === '' || iB === '') { document.getElementById('compareResult').innerHTML = ''; return; }
+        const a = computeResults(sims[iA].data);
+        const b = computeResults(sims[iB].data);
+        const fmt = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+
+        function row(label, valA, valB, higherIsBetter) {
+            let clsA = '', clsB = '';
+            if (valA !== valB) {
+                if (higherIsBetter) { clsA = valA > valB ? 'compare-best' : 'compare-worst'; clsB = valB > valA ? 'compare-best' : 'compare-worst'; }
+                else { clsA = valA < valB ? 'compare-best' : 'compare-worst'; clsB = valB < valA ? 'compare-best' : 'compare-worst'; }
+            }
+            const diff = valA - valB;
+            const diffStr = (diff >= 0 ? '+' : '') + fmt.format(diff);
+            return '<tr><td>' + label + '</td><td class="' + clsA + '">' + fmt.format(valA) + '</td><td class="' + clsB + '">' + fmt.format(valB) + '</td><td>' + diffStr + '</td></tr>';
+        }
+
+        document.getElementById('compareResult').innerHTML =
+            '<table class="compare-table"><thead><tr>' +
+                '<th>Poste</th><th>' + sims[iA].name + '</th><th>' + sims[iB].name + '</th><th>Diff (A-B)</th>' +
+            '</tr></thead><tbody>' +
+            row('TJM Client', a.tjmClient, b.tjmClient, true) +
+            row('Marge Société (%)', a.margePct, b.margePct, true) +
+            row('CA Mensuel', a.caMensuel, b.caMensuel, true) +
+            row('Enveloppe Mensuelle', a.envMensuelle, b.envMensuelle, true) +
+            row('Salaire NET', a.salaireNet, b.salaireNet, true) +
+            row('Salaire BRUT', a.salaireBrut, b.salaireBrut, true) +
+            row('Coût Salaire Chargé', a.coutSalaire, b.coutSalaire, false) +
+            row('Total Options', a.totalOptions, b.totalOptions, false) +
+            row('Solde Mensuel', a.soldeMensuel, b.soldeMensuel, true) +
+            row('Solde Total', a.soldeTotal, b.soldeTotal, true) +
+            '</tbody></table>';
+    }
+
+    // --- PHASE 3 : EXPORTS ---
+    function exportJSON() {
+        const sims = getSimulations();
+        if (sims.length === 0) { showToast('Aucune simulation à exporter.', true); return; }
+        const blob = new Blob([JSON.stringify(sims, null, 2)], { type: 'application/json' });
+        downloadBlob(blob, 'astreos_simulations.json');
+        showToast('Export JSON téléchargé.');
+    }
+
+    function importJSON(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const imported = JSON.parse(e.target.result);
+                if (!Array.isArray(imported)) throw new Error('Format invalide');
+                const existing = getSimulations();
+                let added = 0;
+                imported.forEach(sim => {
+                    if (sim.name && sim.data) {
+                        if (!existing.find(s => s.name === sim.name)) {
+                            existing.push(sim);
+                            added++;
+                        }
+                    }
+                });
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(existing));
+                showToast(added + ' simulation(s) importée(s).');
+            } catch (err) {
+                showToast('Fichier JSON invalide.', true);
+            }
+            event.target.value = '';
+        };
+        reader.readAsText(file);
+    }
+
+    function exportCSV() {
+        const sims = getSimulations();
+        if (sims.length === 0) { showToast('Aucune simulation à exporter.', true); return; }
+        const headers = ['Nom', 'Date', 'TJM Client', 'Marge %', 'TJM Consultant', 'Jours/Mois', 'Durée (Mois)',
+            'Salaire NET', 'Salaire BRUT', 'CA Mensuel', 'Enveloppe Mensuelle', 'Coût Salaire Chargé',
+            'Options Mensuelles', 'Solde Mensuel', 'Solde Total'];
+        const rows = sims.map(sim => {
+            const r = computeResults(sim.data);
+            return [sim.name, new Date(sim.date).toLocaleDateString('fr-FR'),
+                r.tjmClient, r.margePct.toFixed(2), r.tjmConsultant, r.nbJours, r.nbMois,
+                r.salaireNet, r.salaireBrut.toFixed(2), r.caMensuel, r.envMensuelle,
+                r.coutSalaire.toFixed(2), r.totalOptions.toFixed(2),
+                r.soldeMensuel.toFixed(2), r.soldeTotal.toFixed(2)
+            ].map(v => '"' + v + '"').join(';');
+        });
+        const csv = '\uFEFF' + headers.join(';') + '\n' + rows.join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+        downloadBlob(blob, 'astreos_simulations.csv');
+        showToast('Export CSV téléchargé.');
+    }
+
+    function exportPDF() {
+        const name = document.getElementById('simName').value.trim() || 'Simulation';
+        const r = computeResults(collectInputs());
+        const fmt = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+        const soldeColor = r.soldeTotal >= 0 ? '#27ae60' : '#c0392b';
+        const soldeLabel = r.soldeTotal >= 0 ? 'EXCÉDENT' : 'DÉFICIT';
+
+        const html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ASTREOS - ' + name + '</title>' +
+            '<style>body{font-family:Arial,sans-serif;padding:40px;color:#222}' +
+            'h1{text-align:center;letter-spacing:3px;border-bottom:3px solid #000;padding-bottom:15px}' +
+            'h2{color:#333;margin-top:30px;font-size:1rem;text-transform:uppercase;letter-spacing:1px}' +
+            'table{width:100%;border-collapse:collapse;margin:10px 0}' +
+            'th,td{padding:10px 15px;text-align:right;border-bottom:1px solid #ddd;font-size:0.9rem}' +
+            'th{background:#000;color:#fff;text-transform:uppercase;font-size:0.8rem}' +
+            'td:first-child,th:first-child{text-align:left}' +
+            '.solde{text-align:center;padding:25px;border-radius:10px;color:#fff;margin-top:30px;font-size:1.8rem;font-weight:bold}' +
+            '.meta{color:#888;font-size:0.85rem;text-align:center;margin-bottom:30px}' +
+            '</style></head><body>' +
+            '<h1>ASTREOS</h1>' +
+            '<p class="meta">' + name + ' — Généré le ' + new Date().toLocaleDateString('fr-FR') + '</p>' +
+            '<h2>Paramètres</h2>' +
+            '<table><tr><td>TJM Client</td><td>' + fmt.format(r.tjmClient) + '</td></tr>' +
+            '<tr><td>Marge Cible</td><td>' + r.margePct.toFixed(1) + ' %</td></tr>' +
+            '<tr><td>TJM Consultant</td><td>' + fmt.format(r.tjmConsultant) + '</td></tr>' +
+            '<tr><td>Durée</td><td>' + r.nbMois + ' mois (' + r.nbJours + ' j/mois)</td></tr></table>' +
+            '<h2>Bilan Financier</h2>' +
+            '<table><thead><tr><th>Poste</th><th>Mensuel</th><th>Total (' + r.nbMois + ' mois)</th></tr></thead><tbody>' +
+            '<tr><td><b>CA Facturé Client</b></td><td>' + fmt.format(r.caMensuel) + '</td><td>' + fmt.format(r.caMensuel * r.nbMois) + '</td></tr>' +
+            '<tr><td>Marge Société</td><td>' + fmt.format(r.margeMensuelle) + '</td><td>' + fmt.format(r.margeMensuelle * r.nbMois) + '</td></tr>' +
+            '<tr style="color:#3498db"><td><b>Enveloppe Dispo</b></td><td>' + fmt.format(r.envMensuelle) + '</td><td>' + fmt.format(r.envMensuelle * r.nbMois) + '</td></tr>' +
+            '<tr><td><b>Salaire NET</b></td><td>' + fmt.format(r.salaireNet) + '</td><td>' + fmt.format(r.salaireNet * r.nbMois) + '</td></tr>' +
+            '<tr><td><b>Salaire BRUT</b></td><td>' + fmt.format(r.salaireBrut) + '</td><td>' + fmt.format(r.salaireBrut * r.nbMois) + '</td></tr>' +
+            '<tr style="color:#c0392b"><td><b>Coût Salaire Chargé</b></td><td>' + fmt.format(r.coutSalaire) + '</td><td>' + fmt.format(r.coutSalaire * r.nbMois) + '</td></tr>' +
+            '<tr><td>Options & Frais</td><td>' + fmt.format(r.totalOptions) + '</td><td>' + fmt.format(r.totalOptions * r.nbMois) + '</td></tr>' +
+            '</tbody></table>' +
+            '<div class="solde" style="background:' + soldeColor + '">' + soldeLabel + '<br>' + fmt.format(r.soldeTotal) + '</div>' +
+            '</body></html>';
+
+        const win = window.open('', '_blank');
+        win.document.write(html);
+        win.document.close();
+        win.print();
+    }
+
+    function downloadBlob(blob, filename) {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(a.href);
+    }
+</script>
+
+</body>
+</html>
